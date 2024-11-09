@@ -29,7 +29,7 @@ boring_words = load_boring_words()
 
 def is_boring(title: str) -> bool:
     for word in boring_words:
-        if word.lower() in title.lower():
+        if word in title:
             return True
     return False
 
@@ -41,16 +41,14 @@ while True:
     logger.info(f"Searching with {offset=:,}, found={len(this_week_papers):,}")
     results = client.results(search, offset=offset)
 
-    batch_papers = []
     try:
-        for r in tqdm(
-            client.results(search),
-            total=batch_size,
-            desc="Processing batch",
-        ):
-            last_r = r
-            if r.published >= start_of_week and not is_boring(r.title):
-                batch_papers.append(r)
+        batch_papers: list[arxiv.Result] = list(
+            tqdm(
+                client.results(search),
+                total=batch_size,
+                desc="Processing batch",
+            )
+        )
     except arxiv.UnexpectedEmptyPageError as e:
         logger.warning(e)
         logger.warning("Retrying...")
@@ -58,7 +56,7 @@ while True:
 
     this_week_papers.extend(batch_papers)
 
-    if last_r is not None and last_r.published >= start_of_week:
+    if this_week_papers[-1].published >= start_of_week:
         offset += batch_size
     else:
         break
@@ -70,10 +68,10 @@ for paper in this_week_papers:
         "id": paper.get_short_id(),
         "title": paper.title,
         "link": paper.pdf_url,
-        "published": paper.published.astimezone(timezone.utc).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ),
+        "published": paper.published,
     }
-processed_df = pd.DataFrame(processed.values())
-print(f"Found {len(processed_df)} papers submitted this week.")
-processed_df.to_csv("this_week_papers_9_11_2024.csv", index=True)
+df = pd.DataFrame(processed.values())
+print(f"Found {len(df)} papers submitted this week.")
+this_week_df = df.loc[df["published"] >= start_of_week]
+this_week_df = this_week_df.loc[~this_week_df["title"].apply(is_boring)]
+df.to_csv("this_week_papers_9_11_2024.csv", index=True)
