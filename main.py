@@ -1,8 +1,5 @@
-import csv
-from pathlib import Path
 from loguru import logger
-import pickle
-from datetime import datetime, timezone, tzinfo
+from datetime import datetime, timezone
 
 import arxiv
 import pandas as pd
@@ -33,7 +30,7 @@ while True:
             desc="Processing batch",
         ):
             last_r = r
-            if r.published >= start_of_week and "cs.CV" in r.categories:
+            if r.published >= start_of_week:
                 batch_papers.append(r)
     except arxiv.UnexpectedEmptyPageError as e:
         logger.warning(e)
