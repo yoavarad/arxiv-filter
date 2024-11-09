@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from loguru import logger
 from datetime import datetime, timezone
 
@@ -17,6 +19,23 @@ search = arxiv.Search(
 this_week_papers: list[arxiv.Result] = []
 start_of_week = datetime(2024, 11, 3, tzinfo=timezone.utc)
 
+
+def load_boring_words() -> list[str]:
+    return json.loads(Path("boring_words.json").read_text())
+
+
+boring_words = load_boring_words()
+
+
+def is_boring(title: str) -> bool:
+    for word in boring_words:
+        if word.lower() in title.lower():
+            return True
+    return False
+
+
+logger.debug(f"Boring words: {boring_words}")
+
 offset = 0
 while True:
     logger.info(f"Searching with {offset=:,}, found={len(this_week_papers):,}")
@@ -30,7 +49,7 @@ while True:
             desc="Processing batch",
         ):
             last_r = r
-            if r.published >= start_of_week:
+            if r.published >= start_of_week and not is_boring(r.title):
                 batch_papers.append(r)
     except arxiv.UnexpectedEmptyPageError as e:
         logger.warning(e)
