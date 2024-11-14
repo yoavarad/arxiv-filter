@@ -7,6 +7,10 @@ import arxiv
 import pandas as pd
 from tqdm import tqdm
 
+start_of_week = datetime(2024, 11, 10, tzinfo=timezone.utc)
+output_file = "this_week_papers_16_11_2024.csv"
+
+
 client = arxiv.Client()
 batch_size = 1000
 
@@ -17,7 +21,6 @@ search = arxiv.Search(
 )
 
 this_week_papers: list[arxiv.Result] = []
-start_of_week = datetime(2024, 11, 3, tzinfo=timezone.utc)
 
 
 def load_boring_words() -> list[str]:
@@ -71,7 +74,8 @@ for paper in this_week_papers:
         "published": paper.published,
     }
 df = pd.DataFrame(processed.values())
-print(f"Found {len(df)} papers submitted this week.")
 this_week_df = df.loc[df["published"] >= start_of_week]
 this_week_df = this_week_df.loc[~this_week_df["title"].apply(is_boring)]
-df.to_csv("this_week_papers_9_11_2024.csv", index=True)
+logger.info(f"Found {len(this_week_df)} papers submitted this week.")
+this_week_df.to_csv(output_file, index=True)
+logger.info(f"Saved to {output_file}")
