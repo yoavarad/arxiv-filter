@@ -73,9 +73,12 @@ for paper in this_week_papers:
         "link": paper.pdf_url,
         "published": paper.published,
     }
+
 df = pd.DataFrame(processed.values())
-this_week_df = df.loc[df["published"] >= start_of_week]
-this_week_df = this_week_df.loc[~this_week_df["title"].apply(is_boring)]
-logger.info(f"Found {len(this_week_df)} papers submitted this week.")
-this_week_df.to_csv(output_file, index=True)
+df = df.loc[df["published"] >= start_of_week]
+relevant_df = df.loc[~df["title"].apply(is_boring)].copy()
+logger.info(
+    f"Found {len(relevant_df):,}/{len(df):,} ({len(relevant_df)/len(df):.2%}) *relevant* papers submitted this week."
+)
+relevant_df.to_csv(output_file, index=True)
 logger.info(f"Saved to {output_file}")
