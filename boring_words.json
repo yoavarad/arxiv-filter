@@ -4,6 +4,8 @@
     "Autonomous Driving",
     "Biomass",
     "Cancer",
+	"cancer",
+	"Carcinoma",
     "Encephalopathy",
     "Endoscop",
     "Fibrosis",
@@ -22,5 +24,6 @@
     "Surgical",
     "Survey",
     "Tumor",
-    "X-ray"
+	"X-Ray",
+	"X-ray"
 ]
