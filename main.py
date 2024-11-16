@@ -76,7 +76,11 @@ for paper in this_week_papers:
 
 df = pd.DataFrame(processed.values())
 df = df.loc[df["published"] >= start_of_week]
-relevant_df = df.loc[~df["title"].apply(is_boring)].copy()
+relevant_df = (
+    df.loc[~df["title"].apply(is_boring)]
+    .sort_values("published", ascending=True)  # From old to new
+    .reset_index(drop=True)
+)
 logger.info(
     f"Found {len(relevant_df):,}/{len(df):,} ({len(relevant_df)/len(df):.2%}) *relevant* papers submitted this week."
 )
