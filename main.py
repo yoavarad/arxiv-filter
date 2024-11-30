@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Optional
 from loguru import logger
 from datetime import datetime, timezone
 
@@ -7,8 +8,8 @@ import arxiv
 import pandas as pd
 from tqdm import tqdm
 
-start_of_week = datetime(2024, 11, 10, tzinfo=timezone.utc)
-output_file = "this_week_papers_16_11_2024.csv"
+start_of_week = datetime(2024, 11, 24, tzinfo=timezone.utc)
+output_file = "this_week_papers_30_11_2024.csv"
 
 
 client = arxiv.Client()
@@ -65,12 +66,19 @@ while True:
         break
 
 
+def get_abs_link_or_none(paper: arxiv.Result) -> Optional[str]:
+    for link in paper.links:
+        if link.href.startswith("http://arxiv.org/abs/"):
+            return link.href
+
+
 processed = {}
 for paper in this_week_papers:
     processed[paper.get_short_id().split("v")[0]] = {
         "id": paper.get_short_id(),
         "title": paper.title,
-        "link": paper.pdf_url,
+        "pdf_link": paper.pdf_url,
+        "abs_link": get_abs_link_or_none(paper),
         "published": paper.published,
     }
 
@@ -84,5 +92,7 @@ relevant_df = (
 logger.info(
     f"Found {len(relevant_df):,}/{len(df):,} ({len(relevant_df)/len(df):.2%}) *relevant* papers submitted this week."
 )
-relevant_df.to_csv(output_file, index=True)
+relevant_df.to_csv(
+    output_file, index=True, columns=["title", "abs_link", "pdf_link", "published"]
+)
 logger.info(f"Saved to {output_file}")
